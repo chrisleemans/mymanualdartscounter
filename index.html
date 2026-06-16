@@ -2,24 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>Darts Counter — Practice Edition</title>
 <style>
   :root {
-    --board-green: #173326;
-    --board-green-light: #21452F;
-    --board-red: #7E2A1E;
-    --board-red-light: #9C3823;
+    --board-green: #1B2B26;
+    --surface: rgba(255,255,255,0.06);
+    --border-soft: rgba(255,255,255,0.10);
+    --border-strong: rgba(255,255,255,0.18);
     --chalk: #F4F0E6;
-    --chalk-dim: #B9B3A4;
-    --frame-wood: #3B2A1E;
-    --frame-wood-light: #5A3F2C;
-    --wire: #C9A24B;
+    --chalk-dim: #9CA8A0;
     --accent-yellow: #E8C547;
-    --accent-red: #D9583E;
-    --accent-green: #7FBE7F;
-    --shadow: rgba(0,0,0,0.45);
+    --accent-red: #E0573E;
+    --accent-green: #5FCB8C;
+    --shadow: rgba(0,0,0,0.5);
     --cream: #F4F0E6;
+    --radius: 18px;
+    --radius-sm: 12px;
   }
 
   * {
@@ -32,124 +31,145 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
   }
 
+  html {
+    background: #0a0d0c;
+  }
+
   body {
-    background: var(--frame-wood);
-    background-image:
-      radial-gradient(circle at 50% 0%, rgba(255,255,255,0.04) 0%, transparent 60%),
-      repeating-linear-gradient(115deg, rgba(0,0,0,0.10) 0px, rgba(0,0,0,0.10) 1px, transparent 1px, transparent 26px),
-      repeating-linear-gradient(25deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 30px);
     color: var(--chalk);
     min-height: 100vh;
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    padding: 18px 10px 40px;
+    padding: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Real dartboard background, fixed behind everything */
+  .board-bg {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: max(900px, 110vmin);
+    height: max(900px, 110vmin);
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .board-bg svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    filter: saturate(0.85);
+  }
+  .board-veil {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(circle at 50% 42%, rgba(10,13,12,0.35) 0%, rgba(10,13,12,0.78) 60%, rgba(10,13,12,0.94) 100%);
+    pointer-events: none;
   }
 
   .app {
     width: 100%;
-    max-width: 820px;
+    max-width: 640px;
+    position: relative;
+    z-index: 1;
   }
 
   /* ---------- Header ---------- */
   .header {
     text-align: center;
     margin-bottom: 16px;
-    position: relative;
   }
   .header h1 {
-    font-weight: 800;
-    font-size: 26px;
-    letter-spacing: 6px;
-    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: 2px;
     color: var(--cream);
     margin: 0;
-    text-shadow: 0 2px 0 var(--shadow);
   }
   .header h1 .pip {
     color: var(--accent-red);
+    font-size: 13px;
+    vertical-align: middle;
   }
   .header p {
     color: var(--chalk-dim);
     font-size: 12px;
-    margin: 6px 0 0;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    margin: 5px 0 0;
+    letter-spacing: 0.5px;
   }
 
-  /* dartboard ring decoration */
-  .ring-deco {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 10px;
+  /* ---------- Glass panel base ---------- */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: 0 8px 32px var(--shadow);
   }
-  .ring-deco span {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
-  .ring-deco span:nth-child(odd) { background: var(--board-red-light); }
-  .ring-deco span:nth-child(even) { background: var(--cream); }
 
   /* ---------- Setup screen ---------- */
   .setup-card {
-    background: var(--board-green);
-    border: 8px solid var(--frame-wood-light);
-    border-radius: 8px;
-    padding: 26px;
-    box-shadow: 0 10px 28px var(--shadow), inset 0 0 0 2px rgba(0,0,0,0.15);
+    padding: 24px;
   }
   .setup-card h2 {
-    letter-spacing: 3px;
-    text-transform: uppercase;
+    letter-spacing: 1px;
     font-size: 15px;
-    font-weight: 800;
+    font-weight: 700;
     margin: 0 0 18px;
-    color: var(--accent-yellow);
-    border-bottom: 2px dashed rgba(244,240,230,0.18);
-    padding-bottom: 10px;
+    color: var(--cream);
   }
   .form-row {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
   .form-row label {
     display: block;
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 1px;
     color: var(--chalk-dim);
     margin-bottom: 6px;
-    font-weight: 700;
+    font-weight: 600;
   }
   .form-row input[type="text"] {
     width: 100%;
     padding: 12px 14px;
-    font-size: 17px;
-    font-weight: 700;
-    border: 2px solid var(--board-green-light);
-    border-radius: 6px;
-    background: var(--cream);
-    color: var(--frame-wood);
+    font-size: 16px;
+    font-weight: 500;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: rgba(0,0,0,0.25);
+    color: var(--chalk);
+  }
+  .form-row input::placeholder {
+    color: var(--chalk-dim);
+    opacity: 0.6;
   }
   .form-row input:focus {
-    outline: 3px solid var(--accent-yellow);
+    outline: none;
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 3px rgba(232,197,71,0.18);
   }
   .start-select {
     display: flex;
-    gap: 10px;
+    gap: 8px;
   }
   .start-select button {
     flex: 1;
     padding: 12px;
     font-size: 16px;
-    font-weight: 800;
-    border: 2px solid var(--board-green-light);
-    border-radius: 6px;
-    background: var(--board-green-light);
+    font-weight: 700;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: rgba(0,0,0,0.2);
     color: var(--chalk);
     cursor: pointer;
-    transition: all 0.12s;
+    transition: all 0.15s;
     -webkit-appearance: none;
   }
   .start-select button.active {
@@ -160,18 +180,17 @@
 
   .big-btn {
     width: 100%;
-    padding: 16px;
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     background: var(--accent-yellow);
     color: #2c2300;
     cursor: pointer;
-    margin-top: 6px;
-    transition: transform 0.08s, background 0.12s;
+    margin-top: 4px;
+    transition: transform 0.08s, opacity 0.12s, background 0.12s;
     -webkit-appearance: none;
     touch-action: manipulation;
   }
@@ -182,178 +201,161 @@
     opacity: 0.35;
     cursor: not-allowed;
   }
-  .big-btn.danger {
-    background: var(--accent-red);
-    color: #fff;
-  }
 
   /* ---------- Game screen ---------- */
   .game {
     display: none;
   }
   .game.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
   .scoreboard {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-bottom: 10px;
   }
   .player-panel {
-    background: var(--board-green);
-    border: 6px solid var(--frame-wood-light);
-    border-radius: 8px;
     padding: 14px 10px;
     text-align: center;
-    box-shadow: 0 6px 18px var(--shadow), inset 0 0 0 2px rgba(0,0,0,0.15);
     transition: border-color 0.2s, box-shadow 0.2s;
-    position: relative;
-    overflow: hidden;
-  }
-  .player-panel::before {
-    content: '';
-    position: absolute;
-    top: -40px; right: -40px;
-    width: 100px; height: 100px;
-    border-radius: 50%;
-    border: 14px solid var(--board-red);
-    opacity: 0.25;
   }
   .player-panel.active-player {
-    border-color: var(--accent-yellow);
-    box-shadow: 0 0 0 3px rgba(232,197,71,0.35), 0 6px 18px var(--shadow);
+    border-color: rgba(232,197,71,0.5);
+    box-shadow: 0 0 0 1px rgba(232,197,71,0.35), 0 8px 32px var(--shadow);
   }
   .player-name {
     font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    font-weight: 800;
+    letter-spacing: 1px;
+    font-weight: 600;
     color: var(--chalk-dim);
     margin: 0 0 4px;
     min-height: 16px;
-    position: relative;
-    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .player-name.is-turn {
     color: var(--accent-yellow);
   }
-  .player-name.is-turn::after {
-    content: ' \25CF';
-    font-size: 8px;
-    vertical-align: middle;
+  .player-name .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-yellow);
+    opacity: 0;
+    flex-shrink: 0;
+  }
+  .player-name.is-turn .dot {
+    opacity: 1;
   }
   .player-score {
     font-family: 'Courier New', monospace;
-    font-size: clamp(36px, 11vw, 60px);
-    font-weight: 800;
+    font-size: clamp(38px, 14vw, 58px);
+    font-weight: 700;
     line-height: 1;
     margin: 0;
-    letter-spacing: 2px;
-    position: relative;
-    z-index: 1;
+    letter-spacing: 1px;
   }
   .player-meta {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
-    margin-top: 6px;
+    margin-top: 4px;
     font-size: 11px;
     color: var(--chalk-dim);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .player-meta span {
+    color: var(--chalk);
     font-weight: 700;
-    letter-spacing: 1px;
-    position: relative;
-    z-index: 1;
   }
 
   /* ---------- Entry panel ---------- */
   .entry-panel {
-    background: var(--board-green);
-    border: 6px solid var(--frame-wood-light);
-    border-radius: 8px;
     padding: 16px;
-    box-shadow: 0 6px 18px var(--shadow), inset 0 0 0 2px rgba(0,0,0,0.15);
-    margin-bottom: 10px;
   }
   .entry-title {
-    text-transform: uppercase;
-    letter-spacing: 3px;
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--accent-yellow);
     margin: 0 0 14px;
     text-align: center;
+    letter-spacing: 0.5px;
   }
 
   .entry-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
   .entry-field {
-    background: var(--cream);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     padding: 10px 12px;
-    border: 2px solid var(--board-green-light);
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border-soft);
     cursor: pointer;
-    transition: border-color 0.12s, box-shadow 0.12s;
+    transition: border-color 0.12s, box-shadow 0.12s, background 0.12s;
   }
   .entry-field.focused {
     border-color: var(--accent-yellow);
-    box-shadow: 0 0 0 3px rgba(232,197,71,0.3);
+    box-shadow: 0 0 0 3px rgba(232,197,71,0.18);
+    background: rgba(232,197,71,0.06);
   }
   .entry-field label {
     display: block;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--frame-wood-light);
-    font-weight: 800;
+    font-size: 10.5px;
+    letter-spacing: 1px;
+    color: var(--chalk-dim);
+    font-weight: 600;
     margin-bottom: 2px;
   }
   .entry-field .value {
     font-family: 'Courier New', monospace;
     font-size: clamp(22px, 6vw, 28px);
-    font-weight: 800;
-    color: var(--frame-wood);
+    font-weight: 700;
+    color: var(--cream);
     min-height: 30px;
     line-height: 1.2;
   }
   .entry-field .value.placeholder {
-    color: #a8a193;
-    font-weight: 700;
+    color: var(--chalk-dim);
+    opacity: 0.6;
+    font-weight: 600;
   }
   .entry-field.disabled {
-    opacity: 0.55;
+    opacity: 0.45;
     cursor: default;
   }
 
   /* quick throw buttons */
   .quick-section-label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 1px;
     color: var(--chalk-dim);
-    font-weight: 800;
+    font-weight: 600;
     margin: 0 0 8px;
     text-align: center;
   }
   .quick-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 7px;
     margin-bottom: 14px;
   }
   .quick-btn {
-    padding: 12px 4px;
+    padding: 10px 4px;
     font-family: 'Courier New', monospace;
-    font-size: 18px;
-    font-weight: 800;
-    border: 2px solid var(--board-green-light);
-    border-radius: 6px;
-    background: var(--board-green-light);
+    font-size: 16px;
+    font-weight: 700;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: rgba(0,0,0,0.2);
     color: var(--cream);
     cursor: pointer;
     transition: all 0.1s;
@@ -369,22 +371,22 @@
 
   /* numeric keypad */
   .keypad-wrap {
-    border-top: 2px dashed rgba(244,240,230,0.18);
-    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+    padding-top: 12px;
   }
   .keypad {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 7px;
   }
   .keypad button {
-    padding: 14px 4px;
-    font-size: 22px;
-    font-weight: 800;
-    border: 2px solid var(--board-green-light);
-    border-radius: 6px;
-    background: var(--cream);
-    color: var(--frame-wood);
+    padding: 12px 4px;
+    font-size: 18px;
+    font-weight: 700;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: rgba(0,0,0,0.2);
+    color: var(--cream);
     cursor: pointer;
     transition: all 0.08s;
     -webkit-appearance: none;
@@ -393,26 +395,26 @@
   .keypad button:active {
     transform: scale(0.95);
     background: var(--accent-yellow);
+    color: #2c2300;
   }
   .keypad button.key-clear {
-    background: var(--accent-red);
-    color: #fff;
-    border-color: var(--accent-red);
-    font-size: 14px;
-    letter-spacing: 1px;
+    background: rgba(224,87,62,0.18);
+    color: #ffb8a8;
+    border-color: rgba(224,87,62,0.35);
+    font-size: 12.5px;
+    letter-spacing: 0.5px;
   }
   .keypad button.key-back {
-    background: var(--frame-wood-light);
+    background: rgba(255,255,255,0.08);
     color: var(--cream);
-    border-color: var(--frame-wood-light);
-    font-size: 18px;
+    font-size: 16px;
   }
   .keypad button.key-enter {
-    background: var(--accent-green);
-    color: #11331a;
-    border-color: var(--accent-green);
-    font-size: 14px;
-    letter-spacing: 1px;
+    background: rgba(95,203,140,0.18);
+    color: #b3f0cc;
+    border-color: rgba(95,203,140,0.35);
+    font-size: 12.5px;
+    letter-spacing: 0.5px;
   }
 
   .entry-actions {
@@ -425,38 +427,38 @@
     margin-top: 0;
   }
   .btn-secondary {
-    background: var(--board-green-light);
+    background: rgba(255,255,255,0.06);
     color: var(--chalk);
-    border: 2px solid var(--chalk-dim);
+    border: 1px solid var(--border-soft);
   }
 
   .feedback {
     margin-top: 12px;
-    padding: 10px 12px;
-    border-radius: 6px;
+    padding: 11px 12px;
+    border-radius: var(--radius-sm);
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     text-align: center;
-    letter-spacing: 1px;
+    letter-spacing: 0.3px;
     display: none;
   }
   .feedback.show {
     display: block;
   }
   .feedback.fb-error {
-    background: rgba(217,88,62,0.2);
+    background: rgba(224,87,62,0.14);
     color: #ffb8a8;
-    border: 1px solid var(--accent-red);
+    border: 1px solid rgba(224,87,62,0.35);
   }
   .feedback.fb-success {
-    background: rgba(127,190,127,0.18);
-    color: #c5ecc5;
-    border: 1px solid var(--accent-green);
+    background: rgba(95,203,140,0.14);
+    color: #b3f0cc;
+    border: 1px solid rgba(95,203,140,0.35);
   }
   .feedback.fb-info {
-    background: rgba(232,197,71,0.15);
+    background: rgba(232,197,71,0.12);
     color: var(--accent-yellow);
-    border: 1px solid var(--accent-yellow);
+    border: 1px solid rgba(232,197,71,0.35);
   }
 
   /* checkout suggestion */
@@ -465,8 +467,8 @@
     font-size: 12px;
     color: var(--chalk-dim);
     text-align: center;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
   }
   .checkout-hint strong {
     color: var(--accent-yellow);
@@ -477,29 +479,29 @@
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.55);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 50;
     padding: 16px;
+    backdrop-filter: blur(4px);
   }
   .modal-overlay.show {
     display: flex;
   }
   .modal-box {
     background: var(--board-green);
-    border: 6px solid var(--accent-yellow);
-    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
     padding: 24px;
     text-align: center;
     max-width: 380px;
-    box-shadow: 0 12px 32px var(--shadow);
+    box-shadow: 0 16px 48px var(--shadow);
   }
   .modal-box h3 {
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    font-weight: 800;
+    letter-spacing: 1px;
+    font-weight: 700;
     margin: 0 0 8px;
     color: var(--accent-yellow);
   }
@@ -507,7 +509,7 @@
     color: var(--chalk-dim);
     font-size: 14px;
     margin: 0 0 18px;
-    font-weight: 600;
+    font-weight: 500;
   }
   .modal-actions {
     display: flex;
@@ -518,111 +520,34 @@
     margin-top: 0;
   }
 
-  /* ---------- Stats / history ---------- */
-  details {
-    background: var(--board-green);
-    border: 6px solid var(--frame-wood-light);
-    border-radius: 8px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.15);
-  }
-  summary {
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--accent-yellow);
-    cursor: pointer;
-    list-style: none;
-  }
-  summary::-webkit-details-marker { display: none; }
-  summary::before {
-    content: '\25B8 ';
-  }
-  details[open] summary::before {
-    content: '\25BE ';
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 14px;
-  }
-  .stat-box {
-    background: var(--board-green-light);
-    border-radius: 6px;
-    padding: 10px;
-  }
-  .stat-box h4 {
-    margin: 0 0 8px;
-    font-size: 11px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--chalk-dim);
-    font-weight: 800;
-  }
-  .stat-line {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    font-family: 'Courier New', monospace;
-    padding: 2px 0;
-    font-weight: 700;
-  }
-
-  .history-list {
-    list-style: none;
-    margin: 14px 0 0;
-    padding: 0;
-    max-height: 240px;
-    overflow-y: auto;
-  }
-  .history-list li {
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 6px 8px;
-    border-bottom: 1px dashed rgba(244,240,230,0.15);
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-  }
-  .history-list li:last-child {
-    border-bottom: none;
-  }
-  .hist-bust { color: #ffb8a8; }
-  .hist-win { color: var(--accent-yellow); }
-
-  .controls-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  .controls-row button {
-    flex: 1;
-    margin-top: 0;
-  }
-
   .winner-banner {
     text-align: center;
     background: var(--accent-yellow);
     color: #2c2300;
-    font-weight: 800;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    padding: 14px;
-    border-radius: 8px;
-    margin-bottom: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 13px;
+    border-radius: var(--radius-sm);
     display: none;
   }
   .winner-banner.show {
     display: block;
   }
 
+  .controls-row {
+    display: flex;
+    gap: 10px;
+  }
+  .controls-row button {
+    flex: 1;
+    margin-top: 0;
+  }
+
   /* ---------- Responsive tweaks ---------- */
-  @media (min-width: 640px) {
+
+  /* Larger tablets (iPad) */
+  @media (min-width: 700px) {
+    .app { max-width: 720px; }
     .quick-grid {
       grid-template-columns: repeat(9, 1fr);
     }
@@ -636,24 +561,150 @@
     .keypad button.key-back { grid-column: span 1; }
   }
 
-  @media (max-width: 380px) {
-    .header h1 { font-size: 20px; letter-spacing: 3px; }
-    .quick-btn, .keypad button { font-size: 16px; padding: 12px 2px; }
+  /* Small phones (iPhone SE / compact) */
+  @media (max-width: 390px) {
+    .header h1 { font-size: 20px; letter-spacing: 1px; }
+    .header p { font-size: 11px; }
+    .quick-btn, .keypad button { font-size: 15px; padding: 10px 2px; }
+    .entry-panel { padding: 12px; }
+    .player-panel { padding: 12px 8px; }
+  }
+
+  /* Short / landscape viewports: avoid overflow */
+  @media (max-height: 700px) {
+    body { align-items: flex-start; padding-top: 10px; }
+    .header { margin-bottom: 10px; }
+    .header p { display: none; }
+    .scoreboard, .entry-panel, .controls-row { margin-bottom: 0; }
+    .quick-grid { margin-bottom: 10px; }
+    .entry-grid { margin-bottom: 10px; }
+    .keypad-wrap { padding-top: 10px; }
+    .entry-actions { margin-top: 10px; }
   }
 </style>
 </head>
 <body>
+<div class="board-bg" aria-hidden="true">
+<svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dartboard background">
+  <style>
+    .num-label { font-family: Arial, sans-serif; font-size: 34px; font-weight: 700; fill: #e9dcc3; }
+  </style>
+  <circle cx="500" cy="500" r="492" fill="#1a1108" />
+  <path d="M 436.64,99.99 L 429.60,55.54 A 450.00,450.00 0 0 1 570.40,55.54 L 563.36,99.99 A 405.00,405.00 0 0 0 436.64,99.99 Z" fill="#9c1f1f" />
+  <path d="M 456.98,228.39 L 436.64,99.99 A 405.00,405.00 0 0 1 563.36,99.99 L 543.02,228.39 A 275.00,275.00 0 0 0 456.98,228.39 Z" fill="#e9dcc3" />
+  <path d="M 464.02,272.83 L 456.98,228.39 A 275.00,275.00 0 0 1 543.02,228.39 L 535.98,272.83 A 230.00,230.00 0 0 0 464.02,272.83 Z" fill="#9c1f1f" />
+  <path d="M 490.93,442.71 L 464.02,272.83 A 230.00,230.00 0 0 1 535.98,272.83 L 509.07,442.71 A 58.00,58.00 0 0 0 490.93,442.71 Z" fill="#0a0a0a" />
+  <text x="500.00" y="25.00" class="num-label" text-anchor="middle" dominant-baseline="middle">20</text>
+  <path d="M 563.36,99.99 L 570.40,55.54 A 450.00,450.00 0 0 1 704.30,99.05 L 683.87,139.14 A 405.00,405.00 0 0 0 563.36,99.99 Z" fill="#15522e" />
+  <path d="M 543.02,228.39 L 563.36,99.99 A 405.00,405.00 0 0 1 683.87,139.14 L 624.85,254.97 A 275.00,275.00 0 0 0 543.02,228.39 Z" fill="#0a0a0a" />
+  <path d="M 535.98,272.83 L 543.02,228.39 A 275.00,275.00 0 0 1 624.85,254.97 L 604.42,295.07 A 230.00,230.00 0 0 0 535.98,272.83 Z" fill="#15522e" />
+  <path d="M 509.07,442.71 L 535.98,272.83 A 230.00,230.00 0 0 1 604.42,295.07 L 526.33,448.32 A 58.00,58.00 0 0 0 509.07,442.71 Z" fill="#e9dcc3" />
+  <text x="646.78" y="48.25" class="num-label" text-anchor="middle" dominant-baseline="middle">1</text>
+  <path d="M 683.87,139.14 L 704.30,99.05 A 450.00,450.00 0 0 1 818.20,181.80 L 786.38,213.62 A 405.00,405.00 0 0 0 683.87,139.14 Z" fill="#9c1f1f" />
+  <path d="M 624.85,254.97 L 683.87,139.14 A 405.00,405.00 0 0 1 786.38,213.62 L 694.45,305.55 A 275.00,275.00 0 0 0 624.85,254.97 Z" fill="#e9dcc3" />
+  <path d="M 604.42,295.07 L 624.85,254.97 A 275.00,275.00 0 0 1 694.45,305.55 L 662.63,337.37 A 230.00,230.00 0 0 0 604.42,295.07 Z" fill="#9c1f1f" />
+  <path d="M 526.33,448.32 L 604.42,295.07 A 230.00,230.00 0 0 1 662.63,337.37 L 541.01,458.99 A 58.00,58.00 0 0 0 526.33,448.32 Z" fill="#0a0a0a" />
+  <text x="779.20" y="115.72" class="num-label" text-anchor="middle" dominant-baseline="middle">18</text>
+  <path d="M 786.38,213.62 L 818.20,181.80 A 450.00,450.00 0 0 1 900.95,295.70 L 860.86,316.13 A 405.00,405.00 0 0 0 786.38,213.62 Z" fill="#15522e" />
+  <path d="M 694.45,305.55 L 786.38,213.62 A 405.00,405.00 0 0 1 860.86,316.13 L 745.03,375.15 A 275.00,275.00 0 0 0 694.45,305.55 Z" fill="#0a0a0a" />
+  <path d="M 662.63,337.37 L 694.45,305.55 A 275.00,275.00 0 0 1 745.03,375.15 L 704.93,395.58 A 230.00,230.00 0 0 0 662.63,337.37 Z" fill="#15522e" />
+  <path d="M 541.01,458.99 L 662.63,337.37 A 230.00,230.00 0 0 1 704.93,395.58 L 551.68,473.67 A 58.00,58.00 0 0 0 541.01,458.99 Z" fill="#e9dcc3" />
+  <text x="884.28" y="220.80" class="num-label" text-anchor="middle" dominant-baseline="middle">4</text>
+  <path d="M 860.86,316.13 L 900.95,295.70 A 450.00,450.00 0 0 1 944.46,429.60 L 900.01,436.64 A 405.00,405.00 0 0 0 860.86,316.13 Z" fill="#9c1f1f" />
+  <path d="M 745.03,375.15 L 860.86,316.13 A 405.00,405.00 0 0 1 900.01,436.64 L 771.61,456.98 A 275.00,275.00 0 0 0 745.03,375.15 Z" fill="#e9dcc3" />
+  <path d="M 704.93,395.58 L 745.03,375.15 A 275.00,275.00 0 0 1 771.61,456.98 L 727.17,464.02 A 230.00,230.00 0 0 0 704.93,395.58 Z" fill="#9c1f1f" />
+  <path d="M 551.68,473.67 L 704.93,395.58 A 230.00,230.00 0 0 1 727.17,464.02 L 557.29,490.93 A 58.00,58.00 0 0 0 551.68,473.67 Z" fill="#0a0a0a" />
+  <text x="951.75" y="353.22" class="num-label" text-anchor="middle" dominant-baseline="middle">13</text>
+  <path d="M 900.01,436.64 L 944.46,429.60 A 450.00,450.00 0 0 1 944.46,570.40 L 900.01,563.36 A 405.00,405.00 0 0 0 900.01,436.64 Z" fill="#15522e" />
+  <path d="M 771.61,456.98 L 900.01,436.64 A 405.00,405.00 0 0 1 900.01,563.36 L 771.61,543.02 A 275.00,275.00 0 0 0 771.61,456.98 Z" fill="#0a0a0a" />
+  <path d="M 727.17,464.02 L 771.61,456.98 A 275.00,275.00 0 0 1 771.61,543.02 L 727.17,535.98 A 230.00,230.00 0 0 0 727.17,464.02 Z" fill="#15522e" />
+  <path d="M 557.29,490.93 L 727.17,464.02 A 230.00,230.00 0 0 1 727.17,535.98 L 557.29,509.07 A 58.00,58.00 0 0 0 557.29,490.93 Z" fill="#e9dcc3" />
+  <text x="975.00" y="500.00" class="num-label" text-anchor="middle" dominant-baseline="middle">6</text>
+  <path d="M 900.01,563.36 L 944.46,570.40 A 450.00,450.00 0 0 1 900.95,704.30 L 860.86,683.87 A 405.00,405.00 0 0 0 900.01,563.36 Z" fill="#9c1f1f" />
+  <path d="M 771.61,543.02 L 900.01,563.36 A 405.00,405.00 0 0 1 860.86,683.87 L 745.03,624.85 A 275.00,275.00 0 0 0 771.61,543.02 Z" fill="#e9dcc3" />
+  <path d="M 727.17,535.98 L 771.61,543.02 A 275.00,275.00 0 0 1 745.03,624.85 L 704.93,604.42 A 230.00,230.00 0 0 0 727.17,535.98 Z" fill="#9c1f1f" />
+  <path d="M 557.29,509.07 L 727.17,535.98 A 230.00,230.00 0 0 1 704.93,604.42 L 551.68,526.33 A 58.00,58.00 0 0 0 557.29,509.07 Z" fill="#0a0a0a" />
+  <text x="951.75" y="646.78" class="num-label" text-anchor="middle" dominant-baseline="middle">10</text>
+  <path d="M 860.86,683.87 L 900.95,704.30 A 450.00,450.00 0 0 1 818.20,818.20 L 786.38,786.38 A 405.00,405.00 0 0 0 860.86,683.87 Z" fill="#15522e" />
+  <path d="M 745.03,624.85 L 860.86,683.87 A 405.00,405.00 0 0 1 786.38,786.38 L 694.45,694.45 A 275.00,275.00 0 0 0 745.03,624.85 Z" fill="#0a0a0a" />
+  <path d="M 704.93,604.42 L 745.03,624.85 A 275.00,275.00 0 0 1 694.45,694.45 L 662.63,662.63 A 230.00,230.00 0 0 0 704.93,604.42 Z" fill="#15522e" />
+  <path d="M 551.68,526.33 L 704.93,604.42 A 230.00,230.00 0 0 1 662.63,662.63 L 541.01,541.01 A 58.00,58.00 0 0 0 551.68,526.33 Z" fill="#e9dcc3" />
+  <text x="884.28" y="779.20" class="num-label" text-anchor="middle" dominant-baseline="middle">15</text>
+  <path d="M 786.38,786.38 L 818.20,818.20 A 450.00,450.00 0 0 1 704.30,900.95 L 683.87,860.86 A 405.00,405.00 0 0 0 786.38,786.38 Z" fill="#9c1f1f" />
+  <path d="M 694.45,694.45 L 786.38,786.38 A 405.00,405.00 0 0 1 683.87,860.86 L 624.85,745.03 A 275.00,275.00 0 0 0 694.45,694.45 Z" fill="#e9dcc3" />
+  <path d="M 662.63,662.63 L 694.45,694.45 A 275.00,275.00 0 0 1 624.85,745.03 L 604.42,704.93 A 230.00,230.00 0 0 0 662.63,662.63 Z" fill="#9c1f1f" />
+  <path d="M 541.01,541.01 L 662.63,662.63 A 230.00,230.00 0 0 1 604.42,704.93 L 526.33,551.68 A 58.00,58.00 0 0 0 541.01,541.01 Z" fill="#0a0a0a" />
+  <text x="779.20" y="884.28" class="num-label" text-anchor="middle" dominant-baseline="middle">2</text>
+  <path d="M 683.87,860.86 L 704.30,900.95 A 450.00,450.00 0 0 1 570.40,944.46 L 563.36,900.01 A 405.00,405.00 0 0 0 683.87,860.86 Z" fill="#15522e" />
+  <path d="M 624.85,745.03 L 683.87,860.86 A 405.00,405.00 0 0 1 563.36,900.01 L 543.02,771.61 A 275.00,275.00 0 0 0 624.85,745.03 Z" fill="#0a0a0a" />
+  <path d="M 604.42,704.93 L 624.85,745.03 A 275.00,275.00 0 0 1 543.02,771.61 L 535.98,727.17 A 230.00,230.00 0 0 0 604.42,704.93 Z" fill="#15522e" />
+  <path d="M 526.33,551.68 L 604.42,704.93 A 230.00,230.00 0 0 1 535.98,727.17 L 509.07,557.29 A 58.00,58.00 0 0 0 526.33,551.68 Z" fill="#e9dcc3" />
+  <text x="646.78" y="951.75" class="num-label" text-anchor="middle" dominant-baseline="middle">17</text>
+  <path d="M 563.36,900.01 L 570.40,944.46 A 450.00,450.00 0 0 1 429.60,944.46 L 436.64,900.01 A 405.00,405.00 0 0 0 563.36,900.01 Z" fill="#9c1f1f" />
+  <path d="M 543.02,771.61 L 563.36,900.01 A 405.00,405.00 0 0 1 436.64,900.01 L 456.98,771.61 A 275.00,275.00 0 0 0 543.02,771.61 Z" fill="#e9dcc3" />
+  <path d="M 535.98,727.17 L 543.02,771.61 A 275.00,275.00 0 0 1 456.98,771.61 L 464.02,727.17 A 230.00,230.00 0 0 0 535.98,727.17 Z" fill="#9c1f1f" />
+  <path d="M 509.07,557.29 L 535.98,727.17 A 230.00,230.00 0 0 1 464.02,727.17 L 490.93,557.29 A 58.00,58.00 0 0 0 509.07,557.29 Z" fill="#0a0a0a" />
+  <text x="500.00" y="975.00" class="num-label" text-anchor="middle" dominant-baseline="middle">3</text>
+  <path d="M 436.64,900.01 L 429.60,944.46 A 450.00,450.00 0 0 1 295.70,900.95 L 316.13,860.86 A 405.00,405.00 0 0 0 436.64,900.01 Z" fill="#15522e" />
+  <path d="M 456.98,771.61 L 436.64,900.01 A 405.00,405.00 0 0 1 316.13,860.86 L 375.15,745.03 A 275.00,275.00 0 0 0 456.98,771.61 Z" fill="#0a0a0a" />
+  <path d="M 464.02,727.17 L 456.98,771.61 A 275.00,275.00 0 0 1 375.15,745.03 L 395.58,704.93 A 230.00,230.00 0 0 0 464.02,727.17 Z" fill="#15522e" />
+  <path d="M 490.93,557.29 L 464.02,727.17 A 230.00,230.00 0 0 1 395.58,704.93 L 473.67,551.68 A 58.00,58.00 0 0 0 490.93,557.29 Z" fill="#e9dcc3" />
+  <text x="353.22" y="951.75" class="num-label" text-anchor="middle" dominant-baseline="middle">19</text>
+  <path d="M 316.13,860.86 L 295.70,900.95 A 450.00,450.00 0 0 1 181.80,818.20 L 213.62,786.38 A 405.00,405.00 0 0 0 316.13,860.86 Z" fill="#9c1f1f" />
+  <path d="M 375.15,745.03 L 316.13,860.86 A 405.00,405.00 0 0 1 213.62,786.38 L 305.55,694.45 A 275.00,275.00 0 0 0 375.15,745.03 Z" fill="#e9dcc3" />
+  <path d="M 395.58,704.93 L 375.15,745.03 A 275.00,275.00 0 0 1 305.55,694.45 L 337.37,662.63 A 230.00,230.00 0 0 0 395.58,704.93 Z" fill="#9c1f1f" />
+  <path d="M 473.67,551.68 L 395.58,704.93 A 230.00,230.00 0 0 1 337.37,662.63 L 458.99,541.01 A 58.00,58.00 0 0 0 473.67,551.68 Z" fill="#0a0a0a" />
+  <text x="220.80" y="884.28" class="num-label" text-anchor="middle" dominant-baseline="middle">7</text>
+  <path d="M 213.62,786.38 L 181.80,818.20 A 450.00,450.00 0 0 1 99.05,704.30 L 139.14,683.87 A 405.00,405.00 0 0 0 213.62,786.38 Z" fill="#15522e" />
+  <path d="M 305.55,694.45 L 213.62,786.38 A 405.00,405.00 0 0 1 139.14,683.87 L 254.97,624.85 A 275.00,275.00 0 0 0 305.55,694.45 Z" fill="#0a0a0a" />
+  <path d="M 337.37,662.63 L 305.55,694.45 A 275.00,275.00 0 0 1 254.97,624.85 L 295.07,604.42 A 230.00,230.00 0 0 0 337.37,662.63 Z" fill="#15522e" />
+  <path d="M 458.99,541.01 L 337.37,662.63 A 230.00,230.00 0 0 1 295.07,604.42 L 448.32,526.33 A 58.00,58.00 0 0 0 458.99,541.01 Z" fill="#e9dcc3" />
+  <text x="115.72" y="779.20" class="num-label" text-anchor="middle" dominant-baseline="middle">16</text>
+  <path d="M 139.14,683.87 L 99.05,704.30 A 450.00,450.00 0 0 1 55.54,570.40 L 99.99,563.36 A 405.00,405.00 0 0 0 139.14,683.87 Z" fill="#9c1f1f" />
+  <path d="M 254.97,624.85 L 139.14,683.87 A 405.00,405.00 0 0 1 99.99,563.36 L 228.39,543.02 A 275.00,275.00 0 0 0 254.97,624.85 Z" fill="#e9dcc3" />
+  <path d="M 295.07,604.42 L 254.97,624.85 A 275.00,275.00 0 0 1 228.39,543.02 L 272.83,535.98 A 230.00,230.00 0 0 0 295.07,604.42 Z" fill="#9c1f1f" />
+  <path d="M 448.32,526.33 L 295.07,604.42 A 230.00,230.00 0 0 1 272.83,535.98 L 442.71,509.07 A 58.00,58.00 0 0 0 448.32,526.33 Z" fill="#0a0a0a" />
+  <text x="48.25" y="646.78" class="num-label" text-anchor="middle" dominant-baseline="middle">8</text>
+  <path d="M 99.99,563.36 L 55.54,570.40 A 450.00,450.00 0 0 1 55.54,429.60 L 99.99,436.64 A 405.00,405.00 0 0 0 99.99,563.36 Z" fill="#15522e" />
+  <path d="M 228.39,543.02 L 99.99,563.36 A 405.00,405.00 0 0 1 99.99,436.64 L 228.39,456.98 A 275.00,275.00 0 0 0 228.39,543.02 Z" fill="#0a0a0a" />
+  <path d="M 272.83,535.98 L 228.39,543.02 A 275.00,275.00 0 0 1 228.39,456.98 L 272.83,464.02 A 230.00,230.00 0 0 0 272.83,535.98 Z" fill="#15522e" />
+  <path d="M 442.71,509.07 L 272.83,535.98 A 230.00,230.00 0 0 1 272.83,464.02 L 442.71,490.93 A 58.00,58.00 0 0 0 442.71,509.07 Z" fill="#e9dcc3" />
+  <text x="25.00" y="500.00" class="num-label" text-anchor="middle" dominant-baseline="middle">11</text>
+  <path d="M 99.99,436.64 L 55.54,429.60 A 450.00,450.00 0 0 1 99.05,295.70 L 139.14,316.13 A 405.00,405.00 0 0 0 99.99,436.64 Z" fill="#9c1f1f" />
+  <path d="M 228.39,456.98 L 99.99,436.64 A 405.00,405.00 0 0 1 139.14,316.13 L 254.97,375.15 A 275.00,275.00 0 0 0 228.39,456.98 Z" fill="#e9dcc3" />
+  <path d="M 272.83,464.02 L 228.39,456.98 A 275.00,275.00 0 0 1 254.97,375.15 L 295.07,395.58 A 230.00,230.00 0 0 0 272.83,464.02 Z" fill="#9c1f1f" />
+  <path d="M 442.71,490.93 L 272.83,464.02 A 230.00,230.00 0 0 1 295.07,395.58 L 448.32,473.67 A 58.00,58.00 0 0 0 442.71,490.93 Z" fill="#0a0a0a" />
+  <text x="48.25" y="353.22" class="num-label" text-anchor="middle" dominant-baseline="middle">14</text>
+  <path d="M 139.14,316.13 L 99.05,295.70 A 450.00,450.00 0 0 1 181.80,181.80 L 213.62,213.62 A 405.00,405.00 0 0 0 139.14,316.13 Z" fill="#15522e" />
+  <path d="M 254.97,375.15 L 139.14,316.13 A 405.00,405.00 0 0 1 213.62,213.62 L 305.55,305.55 A 275.00,275.00 0 0 0 254.97,375.15 Z" fill="#0a0a0a" />
+  <path d="M 295.07,395.58 L 254.97,375.15 A 275.00,275.00 0 0 1 305.55,305.55 L 337.37,337.37 A 230.00,230.00 0 0 0 295.07,395.58 Z" fill="#15522e" />
+  <path d="M 448.32,473.67 L 295.07,395.58 A 230.00,230.00 0 0 1 337.37,337.37 L 458.99,458.99 A 58.00,58.00 0 0 0 448.32,473.67 Z" fill="#e9dcc3" />
+  <text x="115.72" y="220.80" class="num-label" text-anchor="middle" dominant-baseline="middle">9</text>
+  <path d="M 213.62,213.62 L 181.80,181.80 A 450.00,450.00 0 0 1 295.70,99.05 L 316.13,139.14 A 405.00,405.00 0 0 0 213.62,213.62 Z" fill="#9c1f1f" />
+  <path d="M 305.55,305.55 L 213.62,213.62 A 405.00,405.00 0 0 1 316.13,139.14 L 375.15,254.97 A 275.00,275.00 0 0 0 305.55,305.55 Z" fill="#e9dcc3" />
+  <path d="M 337.37,337.37 L 305.55,305.55 A 275.00,275.00 0 0 1 375.15,254.97 L 395.58,295.07 A 230.00,230.00 0 0 0 337.37,337.37 Z" fill="#9c1f1f" />
+  <path d="M 458.99,458.99 L 337.37,337.37 A 230.00,230.00 0 0 1 395.58,295.07 L 473.67,448.32 A 58.00,58.00 0 0 0 458.99,458.99 Z" fill="#0a0a0a" />
+  <text x="220.80" y="115.72" class="num-label" text-anchor="middle" dominant-baseline="middle">12</text>
+  <path d="M 316.13,139.14 L 295.70,99.05 A 450.00,450.00 0 0 1 429.60,55.54 L 436.64,99.99 A 405.00,405.00 0 0 0 316.13,139.14 Z" fill="#15522e" />
+  <path d="M 375.15,254.97 L 316.13,139.14 A 405.00,405.00 0 0 1 436.64,99.99 L 456.98,228.39 A 275.00,275.00 0 0 0 375.15,254.97 Z" fill="#0a0a0a" />
+  <path d="M 395.58,295.07 L 375.15,254.97 A 275.00,275.00 0 0 1 456.98,228.39 L 464.02,272.83 A 230.00,230.00 0 0 0 395.58,295.07 Z" fill="#15522e" />
+  <path d="M 473.67,448.32 L 395.58,295.07 A 230.00,230.00 0 0 1 464.02,272.83 L 490.93,442.71 A 58.00,58.00 0 0 0 473.67,448.32 Z" fill="#e9dcc3" />
+  <text x="353.22" y="48.25" class="num-label" text-anchor="middle" dominant-baseline="middle">5</text>
+  <circle cx="500" cy="500" r="58" fill="#15522e" />
+  <circle cx="500" cy="500" r="24" fill="#9c1f1f" />
+  <circle cx="500" cy="500" r="450" fill="none" stroke="#3a3a3a" stroke-width="4" />
+</svg>
+</div>
+<div class="board-veil" aria-hidden="true"></div>
+
 <div class="app">
   <div class="header">
     <h1>Darts<span class="pip">●</span>Counter</h1>
     <p>Practice your subtraction — every checkout requires a double</p>
-    <div class="ring-deco" aria-hidden="true">
-      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-    </div>
   </div>
 
   <!-- SETUP -->
-  <div class="setup-card" id="setupScreen">
+  <div class="setup-card panel" id="setupScreen">
     <h2>New game</h2>
     <div class="form-row">
       <label for="p1name">Player 1 name</label>
@@ -680,25 +731,19 @@
     <div class="winner-banner" id="winnerBanner"></div>
 
     <div class="scoreboard">
-      <div class="player-panel" id="panel0">
-        <p class="player-name" id="name0"></p>
+      <div class="player-panel panel" id="panel0">
+        <p class="player-name" id="name0"><span class="name-text" id="nametext0"></span><span class="dot"></span></p>
         <p class="player-score" id="score0">501</p>
-        <div class="player-meta">
-          <span>Avg <span id="avg0">0.0</span></span>
-          <span>Darts <span id="darts0">0</span></span>
-        </div>
+        <div class="player-meta">Avg <span id="avg0">0.0</span></div>
       </div>
-      <div class="player-panel" id="panel1">
-        <p class="player-name" id="name1"></p>
+      <div class="player-panel panel" id="panel1">
+        <p class="player-name" id="name1"><span class="name-text" id="nametext1"></span><span class="dot"></span></p>
         <p class="player-score" id="score1">501</p>
-        <div class="player-meta">
-          <span>Avg <span id="avg1">0.0</span></span>
-          <span>Darts <span id="darts1">0</span></span>
-        </div>
+        <div class="player-meta">Avg <span id="avg1">0.0</span></div>
       </div>
     </div>
 
-    <div class="entry-panel">
+    <div class="entry-panel panel">
       <p class="entry-title" id="entryTitle">Player 1's turn</p>
 
       <div class="entry-grid">
@@ -757,38 +802,9 @@
     </div>
 
     <div class="controls-row">
-      <button class="big-btn btn-secondary" id="newLegBtn">New leg (same players)</button>
+      <button class="big-btn btn-secondary" id="newLegBtn">New leg</button>
       <button class="big-btn btn-secondary" id="resetBtn">New game</button>
     </div>
-
-    <details>
-      <summary>Stats</summary>
-      <div class="stats-grid">
-        <div class="stat-box">
-          <h4 id="statName0">Player 1</h4>
-          <div class="stat-line"><span>3-dart avg</span><span id="stat-avg-0">0.0</span></div>
-          <div class="stat-line"><span>Highest score</span><span id="stat-high-0">0</span></div>
-          <div class="stat-line"><span>100+ / 140+ / 180</span><span id="stat-tons-0">0 / 0 / 0</span></div>
-          <div class="stat-line"><span>Busts</span><span id="stat-busts-0">0</span></div>
-          <div class="stat-line"><span>First-try correct</span><span id="stat-acc-0">—</span></div>
-          <div class="stat-line"><span>Reveals used</span><span id="stat-reveals-0">0</span></div>
-        </div>
-        <div class="stat-box">
-          <h4 id="statName1">Player 2</h4>
-          <div class="stat-line"><span>3-dart avg</span><span id="stat-avg-1">0.0</span></div>
-          <div class="stat-line"><span>Highest score</span><span id="stat-high-1">0</span></div>
-          <div class="stat-line"><span>100+ / 140+ / 180</span><span id="stat-tons-1">0 / 0 / 0</span></div>
-          <div class="stat-line"><span>Busts</span><span id="stat-busts-1">0</span></div>
-          <div class="stat-line"><span>First-try correct</span><span id="stat-acc-1">—</span></div>
-          <div class="stat-line"><span>Reveals used</span><span id="stat-reveals-1">0</span></div>
-        </div>
-      </div>
-    </details>
-
-    <details open>
-      <summary>History</summary>
-      <ul class="history-list" id="historyList"></ul>
-    </details>
 
   </div>
 </div>
@@ -871,7 +887,6 @@
   const winnerBanner = document.getElementById('winnerBanner');
   const newLegBtn = document.getElementById('newLegBtn');
   const resetBtn = document.getElementById('resetBtn');
-  const historyList = document.getElementById('historyList');
 
   const doubleModal = document.getElementById('doubleModal');
   const doubleModalText = document.getElementById('doubleModalText');
@@ -912,15 +927,12 @@
       attempts: 0,
       pendingThrown: null,
       pendingCorrect: null,
-      gameOver: false,
-      history: []
+      gameOver: false
     };
     setupScreen.style.display = 'none';
     gameScreen.classList.add('active');
-    document.getElementById('statName0').textContent = name1;
-    document.getElementById('statName1').textContent = name2;
-    document.getElementById('name0').textContent = name1;
-    document.getElementById('name1').textContent = name2;
+    document.getElementById('nametext0').textContent = name1;
+    document.getElementById('nametext1').textContent = name2;
     clearTurnUI();
     render();
   }
@@ -930,15 +942,7 @@
       name,
       score: startScore,
       darts: 0,
-      totalScored: 0,
-      highest: 0,
-      tons: 0,
-      tons140: 0,
-      maxOuts: 0,
-      busts: 0,
-      firstTryCorrect: 0,
-      verifiedTurns: 0,
-      reveals: 0
+      totalScored: 0
     };
   }
 
@@ -948,18 +952,8 @@
       const p = state.players[i];
       document.getElementById(`score${i}`).textContent = p.score;
       document.getElementById(`avg${i}`).textContent = avg3(p);
-      document.getElementById(`darts${i}`).textContent = p.darts;
       document.getElementById(`name${i}`).classList.toggle('is-turn', i === state.current && !state.gameOver);
       document.getElementById(`panel${i}`).classList.toggle('active-player', i === state.current && !state.gameOver);
-
-      document.getElementById(`stat-avg-${i}`).textContent = avg3(p);
-      document.getElementById(`stat-high-${i}`).textContent = p.highest;
-      document.getElementById(`stat-tons-${i}`).textContent = `${p.tons} / ${p.tons140} / ${p.maxOuts}`;
-      document.getElementById(`stat-busts-${i}`).textContent = p.busts;
-      document.getElementById(`stat-acc-${i}`).textContent = p.verifiedTurns > 0
-        ? Math.round((p.firstTryCorrect / p.verifiedTurns) * 100) + '%'
-        : '—';
-      document.getElementById(`stat-reveals-${i}`).textContent = p.reveals;
     }
 
     if (state.gameOver) {
@@ -982,26 +976,11 @@
     } else {
       checkoutHint.style.display = 'none';
     }
-
-    renderHistory();
   }
 
   function avg3(p) {
     if (p.darts === 0) return '0.0';
     return (p.totalScored / p.darts * 3).toFixed(1);
-  }
-
-  function renderHistory() {
-    historyList.innerHTML = '';
-    state.history.slice().reverse().forEach(entry => {
-      const li = document.createElement('li');
-      let cls = '';
-      if (entry.type === 'bust') cls = 'hist-bust';
-      if (entry.type === 'win') cls = 'hist-win';
-      li.className = cls;
-      li.innerHTML = `<span>${entry.player}: ${entry.label}</span><span>${entry.scoreAfter}</span>`;
-      historyList.appendChild(li);
-    });
   }
 
   // ---------- Field display updates ----------
@@ -1031,7 +1010,7 @@
   }
 
   function setActiveTarget(target) {
-    if (target === 'newtotal' && state.pendingThrown === null) return; // can't focus until thrown is locked
+    if (target === 'newtotal' && state.pendingThrown === null) return;
     activeTarget = target;
     thrownField.classList.toggle('focused', target === 'thrown');
     newTotalField.classList.toggle('focused', target === 'newtotal');
@@ -1045,7 +1024,7 @@
     const btn = e.target.closest('.quick-btn');
     if (!btn) return;
     if (state.gameOver) return;
-    if (state.pendingThrown !== null) return; // only applies to "thrown" stage
+    if (state.pendingThrown !== null) return;
     thrownBuf = btn.dataset.val;
     setActiveTarget('thrown');
     updateFieldDisplays();
@@ -1066,7 +1045,7 @@
     let buf = (activeTarget === 'thrown') ? thrownBuf : newTotalBuf;
 
     if (activeTarget === 'newtotal' && state.pendingThrown === null) {
-      return; // ignore until thrown locked
+      return;
     }
 
     if (key === 'clear') {
@@ -1074,8 +1053,7 @@
     } else if (key === 'back') {
       buf = buf.slice(0, -1);
     } else {
-      // digit
-      if (buf.length >= 4) return; // sane cap
+      if (buf.length >= 4) return;
       buf = (buf === '0') ? key : buf + key;
     }
 
@@ -1086,6 +1064,64 @@
     }
     updateFieldDisplays();
   });
+
+  // ---------- Physical keyboard support ----------
+  document.addEventListener('keydown', (e) => {
+    if (!state || state.gameOver) return;
+
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === 'INPUT') return;
+
+    const key = e.key;
+
+    if (key >= '0' && key <= '9') {
+      e.preventDefault();
+      simulateKey(key);
+    } else if (key === 'Backspace') {
+      e.preventDefault();
+      simulateKey('back');
+    } else if (key === 'Delete' || key === 'Escape') {
+      e.preventDefault();
+      simulateKey('clear');
+    } else if (key === 'Enter') {
+      e.preventDefault();
+      simulateKey('enter');
+    } else if (key === 'Tab') {
+      e.preventDefault();
+      if (state.pendingThrown !== null) {
+        setActiveTarget(activeTarget === 'thrown' ? 'newtotal' : 'thrown');
+      }
+    }
+  });
+
+  function simulateKey(key) {
+    if (key === 'enter') {
+      handleSubmit();
+      return;
+    }
+
+    if (activeTarget === 'newtotal' && state.pendingThrown === null) {
+      return;
+    }
+
+    let buf = (activeTarget === 'thrown') ? thrownBuf : newTotalBuf;
+
+    if (key === 'clear') {
+      buf = '';
+    } else if (key === 'back') {
+      buf = buf.slice(0, -1);
+    } else {
+      if (buf.length >= 4) return;
+      buf = (buf === '0') ? key : buf + key;
+    }
+
+    if (activeTarget === 'thrown') {
+      thrownBuf = buf;
+    } else {
+      newTotalBuf = buf;
+    }
+    updateFieldDisplays();
+  }
 
   // ---------- Reset feedback UI ----------
   function clearTurnUI() {
@@ -1110,12 +1146,6 @@
   noScoreBtn.addEventListener('click', () => {
     if (state.gameOver) return;
     const cur = state.players[state.current];
-    state.history.push({
-      player: cur.name,
-      label: 'No score (0)',
-      scoreAfter: cur.score,
-      type: 'noscore'
-    });
     cur.darts += 1;
     nextPlayer();
   });
@@ -1150,13 +1180,6 @@
       if (isBust) {
         recordThrowStats(cur, thrown);
         cur.darts += 1;
-        state.history.push({
-          player: cur.name,
-          label: `Threw ${thrown} — bust`,
-          scoreAfter: cur.score,
-          type: 'bust'
-        });
-        cur.busts += 1;
         showFeedback('error', `Bust! ${cur.score} stays unchanged.`);
         setTimeout(() => { nextPlayer(); }, 1200);
         return;
@@ -1193,8 +1216,6 @@
     const correct = entered === state.pendingCorrect;
 
     if (correct) {
-      if (state.attempts === 1) cur.firstTryCorrect += 1;
-      cur.verifiedTurns += 1;
       finalizeTurn(cur, state.pendingThrown, state.pendingCorrect);
       return;
     }
@@ -1205,8 +1226,6 @@
       updateFieldDisplays();
       return;
     } else {
-      cur.verifiedTurns += 1;
-      cur.reveals += 1;
       showFeedback('error', 'Incorrect, try again.');
       showAnswerBtn.style.display = 'inline-block';
       showAnswerBtn.dataset.thrown = state.pendingThrown;
@@ -1224,10 +1243,6 @@
 
   function recordThrowStats(p, thrown) {
     p.totalScored += thrown;
-    if (thrown > p.highest) p.highest = thrown;
-    if (thrown >= 100) p.tons += 1;
-    if (thrown >= 140) p.tons140 += 1;
-    if (thrown === 180) p.maxOuts += 1;
   }
 
   // ---------- Double out modal ----------
@@ -1243,12 +1258,6 @@
     recordThrowStats(cur, thrown);
     cur.darts += 1;
     cur.score = 0;
-    state.history.push({
-      player: cur.name,
-      label: `Threw ${thrown} — checkout! (double out)`,
-      scoreAfter: 0,
-      type: 'win'
-    });
     state.gameOver = true;
     state.winner = state.current;
     clearTurnUI();
@@ -1261,13 +1270,6 @@
     const thrown = state.pendingThrown;
     recordThrowStats(cur, thrown);
     cur.darts += 1;
-    cur.busts += 1;
-    state.history.push({
-      player: cur.name,
-      label: `Threw ${thrown} — no double, bust`,
-      scoreAfter: cur.score,
-      type: 'bust'
-    });
     showFeedback('error', `Bust! Must finish on a double. ${cur.score} stays unchanged.`);
     setTimeout(() => { nextPlayer(); }, 1200);
   });
@@ -1278,25 +1280,12 @@
     player.score = correctNew;
 
     if (correctNew === 0) {
-      state.history.push({
-        player: player.name,
-        label: `Threw ${thrown} — checkout!`,
-        scoreAfter: 0,
-        type: 'win'
-      });
       state.gameOver = true;
       state.winner = state.current;
       clearTurnUI();
       render();
       return;
     }
-
-    state.history.push({
-      player: player.name,
-      label: `Threw ${thrown}, new total ${correctNew}`,
-      scoreAfter: correctNew,
-      type: 'normal'
-    });
 
     nextPlayer();
   }
@@ -1311,7 +1300,7 @@
   newLegBtn.addEventListener('click', () => {
     const names = [state.players[0].name, state.players[1].name];
     const startScore = state.startScore;
-    const startingPlayer = state.history.length ? (1 - (state.winner ?? 0)) : 0;
+    const startingPlayer = (state.winner !== undefined) ? (1 - state.winner) : 0;
     startGame(names[0], names[1], startScore);
     state.current = startingPlayer;
     clearTurnUI();
@@ -1319,7 +1308,7 @@
   });
 
   resetBtn.addEventListener('click', () => {
-    if (!confirm('Start a brand new game? Current stats and history will be cleared.')) return;
+    if (!confirm('Start a brand new game?')) return;
     gameScreen.classList.remove('active');
     setupScreen.style.display = 'block';
     state = null;
