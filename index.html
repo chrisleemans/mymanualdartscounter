@@ -1030,9 +1030,38 @@
     if (!btn) return;
     if (state.gameOver) return;
     if (state.pendingThrown !== null) return;
+
+    const thrown = parseInt(btn.dataset.val, 10);
+    const cur = state.players[state.current];
+
+    // Validate (impossible scores filtered — quick buttons are all valid)
+    const correctNew = cur.score - thrown;
+    const isBust = correctNew < 0 || correctNew === 1;
+
+    if (isBust) {
+      thrownBuf = btn.dataset.val;
+      updateFieldDisplays();
+      showFeedback('error', `Bust! ${cur.score} stays unchanged.`);
+      setTimeout(() => { nextPlayer(); }, 1200);
+      return;
+    }
+
+    if (correctNew === 0) {
+      thrownBuf = btn.dataset.val;
+      updateFieldDisplays();
+      state.pendingThrown = thrown;
+      state.pendingCorrect = correctNew;
+      askDoubleOut(cur, thrown);
+      return;
+    }
+
+    // Normal: lock in thrown, jump straight to new total field
     thrownBuf = btn.dataset.val;
-    setActiveTarget('thrown');
+    state.pendingThrown = thrown;
+    state.pendingCorrect = correctNew;
     updateFieldDisplays();
+    setActiveTarget('newtotal');
+    showFeedback('info', 'Now enter your new total.');
   });
 
   // ---------- Keypad ----------
