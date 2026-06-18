@@ -80,30 +80,6 @@
     z-index: 1;
   }
 
-  /* ---------- Header ---------- */
-  .header {
-    text-align: center;
-    margin-bottom: 16px;
-  }
-  .header h1 {
-    font-weight: 700;
-    font-size: 24px;
-    letter-spacing: 2px;
-    color: var(--cream);
-    margin: 0;
-  }
-  .header h1 .pip {
-    color: var(--accent-red);
-    font-size: 13px;
-    vertical-align: middle;
-  }
-  .header p {
-    color: var(--chalk-dim);
-    font-size: 12px;
-    margin: 5px 0 0;
-    letter-spacing: 0.5px;
-  }
-
   /* ---------- Glass panel base ---------- */
   .panel {
     background: var(--surface);
@@ -220,11 +196,20 @@
   .player-panel {
     padding: 14px 10px;
     text-align: center;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s, opacity 0.25s;
+    opacity: 0.45;
+    transform: scale(0.96);
   }
   .player-panel.active-player {
-    border-color: rgba(232,197,71,0.5);
-    box-shadow: 0 0 0 1px rgba(232,197,71,0.35), 0 8px 32px var(--shadow);
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 1px rgba(232,197,71,0.5), 0 8px 32px rgba(232,197,71,0.15);
+    opacity: 1;
+    transform: scale(1);
+  }
+  /* single player: always full opacity */
+  .player-panel:only-child {
+    opacity: 1;
+    transform: scale(1);
   }
   .player-name {
     font-size: 12px;
@@ -242,7 +227,7 @@
     text-overflow: ellipsis;
   }
   .player-name.is-turn {
-    color: var(--accent-yellow);
+    color: var(--chalk);
   }
   .player-name .dot {
     width: 6px;
@@ -255,6 +240,20 @@
   .player-name.is-turn .dot {
     opacity: 1;
   }
+  .turn-tag {
+    display: none;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #2c2300;
+    background: var(--accent-yellow);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-bottom: 6px;
+  }
+  .active-player .turn-tag {
+    display: inline-block;
+  }
   .player-score {
     font-family: 'Courier New', monospace;
     font-size: clamp(38px, 14vw, 58px);
@@ -262,19 +261,13 @@
     line-height: 1;
     margin: 0;
     letter-spacing: 1px;
-  }
-  .player-meta {
-    margin-top: 4px;
-    font-size: 11px;
     color: var(--chalk-dim);
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    transition: color 0.25s, font-size 0.25s;
   }
-  .player-meta span {
-    color: var(--chalk);
-    font-weight: 700;
+  .active-player .player-score {
+    color: var(--cream);
+    font-size: clamp(46px, 16vw, 68px);
   }
-
   /* ---------- Entry panel ---------- */
   .entry-panel {
     padding: 16px;
@@ -563,19 +556,14 @@
 
   /* Small phones (iPhone SE / compact) */
   @media (max-width: 390px) {
-    .header h1 { font-size: 20px; letter-spacing: 1px; }
-    .header p { font-size: 11px; }
     .quick-btn, .keypad button { font-size: 15px; padding: 10px 2px; }
     .entry-panel { padding: 12px; }
     .player-panel { padding: 12px 8px; }
   }
 
-  /* Short / landscape viewports: avoid overflow */
+  /* Short / landscape viewports */
   @media (max-height: 700px) {
     body { align-items: flex-start; padding-top: 10px; }
-    .header { margin-bottom: 10px; }
-    .header p { display: none; }
-    .scoreboard, .entry-panel, .controls-row { margin-bottom: 0; }
     .quick-grid { margin-bottom: 10px; }
     .entry-grid { margin-bottom: 10px; }
     .keypad-wrap { padding-top: 10px; }
@@ -698,19 +686,21 @@
 <div class="board-veil" aria-hidden="true"></div>
 
 <div class="app">
-  <div class="header">
-    <h1>Darts<span class="pip">●</span>Counter</h1>
-    <p>Practice your subtraction — every checkout requires a double</p>
-  </div>
-
   <!-- SETUP -->
   <div class="setup-card panel" id="setupScreen">
     <h2>New game</h2>
     <div class="form-row">
+      <label>Players</label>
+      <div class="start-select" id="modeSelect">
+        <button data-mode="1" class="active">1 Player</button>
+        <button data-mode="2">2 Players</button>
+      </div>
+    </div>
+    <div class="form-row">
       <label for="p1name">Player 1 name</label>
       <input type="text" id="p1name" placeholder="Player 1" maxlength="20" autocomplete="off">
     </div>
-    <div class="form-row">
+    <div class="form-row" id="p2row" style="display:none;">
       <label for="p2name">Player 2 name</label>
       <input type="text" id="p2name" placeholder="Player 2" maxlength="20" autocomplete="off">
     </div>
@@ -730,16 +720,16 @@
 
     <div class="winner-banner" id="winnerBanner"></div>
 
-    <div class="scoreboard">
+    <div class="scoreboard" id="scoreboard">
       <div class="player-panel panel" id="panel0">
+        <div class="turn-tag">YOUR TURN</div>
         <p class="player-name" id="name0"><span class="name-text" id="nametext0"></span><span class="dot"></span></p>
         <p class="player-score" id="score0">501</p>
-        <div class="player-meta">Avg <span id="avg0">0.0</span></div>
       </div>
       <div class="player-panel panel" id="panel1">
+        <div class="turn-tag">YOUR TURN</div>
         <p class="player-name" id="name1"><span class="name-text" id="nametext1"></span><span class="dot"></span></p>
         <p class="player-score" id="score1">501</p>
-        <div class="player-meta">Avg <span id="avg1">0.0</span></div>
       </div>
     </div>
 
@@ -790,7 +780,6 @@
       </div>
 
       <div class="entry-actions">
-        <button class="big-btn" id="submitBtn">Submit</button>
         <button class="big-btn btn-secondary" id="noScoreBtn">No score</button>
       </div>
 
@@ -808,6 +797,8 @@
 
   </div>
 </div>
+
+<div style="position:fixed; bottom:10px; right:14px; font-size:11px; font-weight:600; color:rgba(255,255,255,0.25); letter-spacing:1px; z-index:2; pointer-events:none;">v1.0</div>
 
 <!-- Double out modal -->
 <div class="modal-overlay" id="doubleModal">
@@ -878,7 +869,6 @@
   const newTotalDisplay = document.getElementById('newTotalDisplay');
   const quickGrid = document.getElementById('quickGrid');
   const keypad = document.getElementById('keypad');
-  const submitBtn = document.getElementById('submitBtn');
   const noScoreBtn = document.getElementById('noScoreBtn');
   const feedback = document.getElementById('feedback');
   const checkoutHint = document.getElementById('checkoutHint');
@@ -894,12 +884,26 @@
   const doubleNoBtn = document.getElementById('doubleNoBtn');
 
   let selectedStart = 501;
+  let selectedMode = 1;
 
   // active keypad target: 'thrown' or 'newtotal'
   let activeTarget = 'thrown';
   // raw string buffers for the two fields
   let thrownBuf = '';
   let newTotalBuf = '';
+
+  // ---------- Mode select ----------
+  const modeSelect = document.getElementById('modeSelect');
+  const p2row = document.getElementById('p2row');
+
+  modeSelect.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    modeSelect.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedMode = parseInt(btn.dataset.mode, 10);
+    p2row.style.display = selectedMode === 2 ? 'block' : 'none';
+  });
 
   // ---------- Setup screen interactions ----------
   startSelect.addEventListener('click', (e) => {
@@ -912,17 +916,17 @@
 
   startGameBtn.addEventListener('click', () => {
     const name1 = p1nameInput.value.trim() || 'Player 1';
-    const name2 = p2nameInput.value.trim() || 'Player 2';
-    startGame(name1, name2, selectedStart);
+    const name2 = selectedMode === 2 ? (p2nameInput.value.trim() || 'Player 2') : null;
+    startGame(name1, name2, selectedStart, selectedMode);
   });
 
-  function startGame(name1, name2, startScore) {
+  function startGame(name1, name2, startScore, playerCount) {
     state = {
       startScore,
-      players: [
-        makePlayer(name1, startScore),
-        makePlayer(name2, startScore)
-      ],
+      playerCount,
+      players: playerCount === 2
+        ? [makePlayer(name1, startScore), makePlayer(name2, startScore)]
+        : [makePlayer(name1, startScore)],
       current: 0,
       attempts: 0,
       pendingThrown: null,
@@ -931,56 +935,57 @@
     };
     setupScreen.style.display = 'none';
     gameScreen.classList.add('active');
+
+    // show/hide panels based on mode
+    const panel1 = document.getElementById('panel1');
+    if (playerCount === 1) {
+      panel1.style.display = 'none';
+      document.getElementById('scoreboard').style.gridTemplateColumns = '1fr';
+    } else {
+      panel1.style.display = '';
+      document.getElementById('scoreboard').style.gridTemplateColumns = '';
+    }
+
     document.getElementById('nametext0').textContent = name1;
-    document.getElementById('nametext1').textContent = name2;
+    if (playerCount === 2) document.getElementById('nametext1').textContent = name2;
     clearTurnUI();
     render();
   }
 
   function makePlayer(name, startScore) {
-    return {
-      name,
-      score: startScore,
-      darts: 0,
-      totalScored: 0
-    };
+    return { name, score: startScore };
   }
 
   // ---------- Render ----------
   function render() {
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < state.players.length; i++) {
       const p = state.players[i];
       document.getElementById(`score${i}`).textContent = p.score;
-      document.getElementById(`avg${i}`).textContent = avg3(p);
       document.getElementById(`name${i}`).classList.toggle('is-turn', i === state.current && !state.gameOver);
       document.getElementById(`panel${i}`).classList.toggle('active-player', i === state.current && !state.gameOver);
     }
 
     if (state.gameOver) {
-      winnerBanner.textContent = `${state.players[state.winner].name} wins the leg!`;
+      const winner = state.players[state.winner ?? 0];
+      winnerBanner.textContent = state.playerCount === 1
+        ? `${winner.name} finished — well done!`
+        : `${winner.name} wins the leg!`;
       winnerBanner.classList.add('show');
       entryTitle.textContent = 'Leg finished';
-      submitBtn.disabled = true;
       noScoreBtn.disabled = true;
     } else {
       winnerBanner.classList.remove('show');
       entryTitle.textContent = `${state.players[state.current].name}'s turn`;
-      submitBtn.disabled = false;
       noScoreBtn.disabled = false;
     }
 
     const cur = state.players[state.current];
     if (!state.gameOver && cur.score <= 170 && CHECKOUTS[cur.score]) {
       checkoutHint.style.display = 'block';
-      checkoutHint.innerHTML = `On a finish: <strong>${cur.score}</strong> → suggested route <strong>${CHECKOUTS[cur.score]}</strong>`;
+      checkoutHint.innerHTML = `On a finish: <strong>${cur.score}</strong> → <strong>${CHECKOUTS[cur.score]}</strong>`;
     } else {
       checkoutHint.style.display = 'none';
     }
-  }
-
-  function avg3(p) {
-    if (p.darts === 0) return '0.0';
-    return (p.totalScored / p.darts * 3).toFixed(1);
   }
 
   // ---------- Field display updates ----------
@@ -1145,14 +1150,10 @@
   // ---------- No score ----------
   noScoreBtn.addEventListener('click', () => {
     if (state.gameOver) return;
-    const cur = state.players[state.current];
-    cur.darts += 1;
     nextPlayer();
   });
 
   // ---------- Submit ----------
-  submitBtn.addEventListener('click', handleSubmit);
-
   function handleSubmit() {
     if (state.gameOver) return;
 
@@ -1178,8 +1179,6 @@
       const isBust = correctNew < 0 || correctNew === 1;
 
       if (isBust) {
-        recordThrowStats(cur, thrown);
-        cur.darts += 1;
         showFeedback('error', `Bust! ${cur.score} stays unchanged.`);
         setTimeout(() => { nextPlayer(); }, 1200);
         return;
@@ -1241,9 +1240,6 @@
     setTimeout(() => finalizeTurn(cur, thrown, correct), 900);
   });
 
-  function recordThrowStats(p, thrown) {
-    p.totalScored += thrown;
-  }
 
   // ---------- Double out modal ----------
   function askDoubleOut(player, thrown) {
@@ -1254,9 +1250,6 @@
   doubleYesBtn.addEventListener('click', () => {
     doubleModal.classList.remove('show');
     const cur = state.players[state.current];
-    const thrown = state.pendingThrown;
-    recordThrowStats(cur, thrown);
-    cur.darts += 1;
     cur.score = 0;
     state.gameOver = true;
     state.winner = state.current;
@@ -1267,16 +1260,11 @@
   doubleNoBtn.addEventListener('click', () => {
     doubleModal.classList.remove('show');
     const cur = state.players[state.current];
-    const thrown = state.pendingThrown;
-    recordThrowStats(cur, thrown);
-    cur.darts += 1;
     showFeedback('error', `Bust! Must finish on a double. ${cur.score} stays unchanged.`);
     setTimeout(() => { nextPlayer(); }, 1200);
   });
 
   function finalizeTurn(player, thrown, correctNew) {
-    recordThrowStats(player, thrown);
-    player.darts += 1;
     player.score = correctNew;
 
     if (correctNew === 0) {
@@ -1291,17 +1279,18 @@
   }
 
   function nextPlayer() {
-    state.current = 1 - state.current;
+    state.current = state.playerCount === 1 ? 0 : 1 - state.current;
     clearTurnUI();
     render();
   }
 
   // ---------- New leg / new game ----------
   newLegBtn.addEventListener('click', () => {
-    const names = [state.players[0].name, state.players[1].name];
+    const names = state.players.map(p => p.name);
     const startScore = state.startScore;
-    const startingPlayer = (state.winner !== undefined) ? (1 - state.winner) : 0;
-    startGame(names[0], names[1], startScore);
+    const playerCount = state.playerCount;
+    const startingPlayer = playerCount === 2 && state.winner !== undefined ? (1 - state.winner) : 0;
+    startGame(names[0], names[1] || null, startScore, playerCount);
     state.current = startingPlayer;
     clearTurnUI();
     render();
